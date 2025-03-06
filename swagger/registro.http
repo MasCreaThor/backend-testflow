@@ -1,9 +1,9 @@
 ### swagger/registro.http
-POST http://localhost:3000/auth/register
+POST http://localhost:3001/auth/register
 Content-Type: application/json
 
 {
-   "email": "yadir2@gmail.com",
+   "email": "udemy.fiona@gmail.com",
   "password": "Yadir12*",
   "name": "yadir"
 }
