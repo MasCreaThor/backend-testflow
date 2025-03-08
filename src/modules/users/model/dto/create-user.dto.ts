@@ -11,5 +11,8 @@ export class CreateUserDto {
   readonly password: string;
 
   @IsNotEmpty({ message: 'El nombre es requerido' })
-  readonly name: string;
+  readonly first_name: string;
+
+  @IsNotEmpty({ message: 'El apellido es requerido' })
+  readonly last_name: string;
 }

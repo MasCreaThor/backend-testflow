@@ -1,5 +1,5 @@
 // src/modules/users/model/dto/update-user.dto.ts
-import { IsEmail, IsOptional, MinLength } from 'class-validator';
+import { IsEmail, MinLength, IsOptional } from 'class-validator';
 
 export class UpdateUserDto {
   @IsEmail({}, { message: 'El correo electrónico no es válido' })
@@ -11,5 +11,8 @@ export class UpdateUserDto {
   readonly password?: string;
 
   @IsOptional()
-  readonly name?: string;
+  readonly first_name?: string;
+
+  @IsOptional()
+  readonly last_name?: string;
 }

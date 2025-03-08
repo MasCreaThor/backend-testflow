@@ -8,18 +8,17 @@ import { CreateUserDto, UpdateUserDto } from '../../model/dto';
 
 @Injectable()
 export class UserRepository {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   // Función auxiliar para convertir Documentos de Mongoose a IUser
   private documentToUser(doc: UserDocument): IUser {
-    const user = doc.toObject();
+    const user: IUser = doc.toObject() as IUser;
     return {
       _id: user._id.toString(), // Convertir ObjectId a string
       email: user.email,
       password: user.password,
-      name: user.name,
+      first_name: user.first_name,
+      last_name: user.last_name,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastLogin: user.lastLogin,
@@ -28,14 +27,13 @@ export class UserRepository {
 
   async findAll(): Promise<IUser[]> {
     const users = await this.userModel.find().exec();
-    return users.map(user => this.documentToUser(user));
+    return users.map((user) => this.documentToUser(user));
   }
 
   async findById(id: string): Promise<IUser | null> {
     if (!Types.ObjectId.isValid(id)) {
       return null;
     }
-    
     const user = await this.userModel.findById(id).exec();
     return user ? this.documentToUser(user) : null;
   }
@@ -55,11 +53,9 @@ export class UserRepository {
     if (!Types.ObjectId.isValid(id)) {
       return null;
     }
-    
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, userData, { new: true })
       .exec();
-      
     return updatedUser ? this.documentToUser(updatedUser) : null;
   }
 
@@ -67,11 +63,10 @@ export class UserRepository {
     if (!Types.ObjectId.isValid(id)) {
       return null;
     }
-    
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, { lastLogin: new Date() }, { new: true })
       .exec();
-      
+
     return updatedUser ? this.documentToUser(updatedUser) : null;
   }
 
@@ -79,7 +74,7 @@ export class UserRepository {
     if (!Types.ObjectId.isValid(id)) {
       return null;
     }
-    
+
     const deletedUser = await this.userModel.findByIdAndDelete(id).exec();
     return deletedUser ? this.documentToUser(deletedUser) : null;
   }
@@ -88,7 +83,7 @@ export class UserRepository {
     try {
       await this.userModel.findOne().exec();
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
