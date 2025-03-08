@@ -16,11 +16,13 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   
   // Middleware de seguridad
-  app.use(helmet({
-    contentSecurityPolicy: false,  // Deshabilitar CSP para desarrollo
-  }));
+  app.use(
+    helmet({
+      contentSecurityPolicy: false, // Deshabilitar CSP para desarrollo
+    }) as any
+  );
   app.use(compression());
-  
+
   // Configuración de CORS (modificada)
   app.enableCors({
     origin: true,  // Permitir todas las origenes en desarrollo
@@ -28,7 +30,7 @@ async function bootstrap() {
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
-  
+
   // Configuración de Swagger con archivo YAML externo
   const swaggerYamlPath = path.join(process.cwd(), 'swagger', 'api-docs.yaml');
   let swaggerDocument;
