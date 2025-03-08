@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
 import { UserRepository } from '../../users/infra/repositories';
+import { PeopleRepository } from '../../people/infra/repositories';
 import { TokenRepository } from '../infra/repositories';
 import { ResetPasswordRequestDto, ResetPasswordDto } from '../model/dto';
 import { IUser } from '../../users/model/interfaces';
@@ -15,6 +16,7 @@ export class ResetPasswordService {
 
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly peopleRepository: PeopleRepository,
     private readonly tokenRepository: TokenRepository,
     private readonly emailService: EmailService,
   ) {}
@@ -31,6 +33,10 @@ export class ResetPasswordService {
         message: 'Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña',
       };
     }
+
+    // Buscar el perfil de persona asociado al usuario
+    const personProfile = await this.peopleRepository.findByUserId(user._id);
+    const fullName = personProfile ? `${personProfile.firstName} ${personProfile.lastName}` : 'Usuario';
 
     // Eliminar tokens de reset anteriores
     await this.tokenRepository.deleteUserTokens(user._id, 'reset');
@@ -53,7 +59,7 @@ export class ResetPasswordService {
     const emailSent = await this.emailService.sendPasswordResetEmail(
       user.email,
       resetToken,
-      user.name,
+      fullName,
     );
 
     if (!emailSent) {
@@ -68,7 +74,6 @@ export class ResetPasswordService {
     };
   }
 
-  // ESTE ES EL MÉTODO QUE FALTA
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
     this.logger.log(`Intento de restablecimiento de contraseña con token`);
     

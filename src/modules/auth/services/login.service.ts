@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
 import { UserRepository } from '../../users/infra/repositories';
+import { PeopleRepository } from '../../people/infra/repositories';
 import { UpdateLastLoginService } from '../../users/services';
 import { TokenRepository } from '../infra/repositories';
 import { LoginDto } from '../model/dto';
@@ -16,6 +17,7 @@ import { Helper } from '../../../common/utils';
 export class LoginService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly peopleRepository: PeopleRepository,
     private readonly tokenRepository: TokenRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -88,7 +90,6 @@ export class LoginService {
       user: {
         _id: sanitizedUser._id as string,
         email: sanitizedUser.email,
-        name: sanitizedUser.name,
       },
       accessToken,
       refreshToken,

@@ -1,0 +1,8 @@
+PUT http://localhost:3001/people/ID_PERSONA
+Content-Type: application/json
+Authorization: Bearer TU_TOKEN_JWT_AQUI
+
+{
+  "firstName": "Yadir Actualizado",
+  "lastName": "Muñoz Actualizado"
+}

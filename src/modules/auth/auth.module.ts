@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
+import { PeopleModule } from '../people/people.module';
 
 import { 
   LoginController,
@@ -28,6 +29,7 @@ import { TokenRepository } from './infra/repositories';
   imports: [
     UsersModule,
     EmailModule,
+    PeopleModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

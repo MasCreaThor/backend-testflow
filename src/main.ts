@@ -70,5 +70,6 @@ async function bootstrap() {
   console.log(`Application is running on: ${await app.getUrl()}`);
   console.log(`Swagger documentation available at: ${await app.getUrl()}/api-docs`);
   console.log(`Servidor corriendo en: http://localhost:${port}`);
+  console.log(`Abre este link para la conección de la BD (modo dev) en: mongodb://localhost:27017/testflow`);
 }
 bootstrap();

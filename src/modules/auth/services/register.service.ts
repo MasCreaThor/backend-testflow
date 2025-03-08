@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
 import { CreateUserService } from '../../users/services';
+import { PeopleRepository } from '../../people/infra/repositories';
 import { TokenRepository } from '../infra/repositories';
 import { RegisterDto } from '../model/dto';
 import { IAuthResponse, IJwtPayload } from '../model/interfaces';
@@ -15,6 +16,7 @@ export class RegisterService {
 
   constructor(
     private readonly createUserService: CreateUserService,
+    private readonly peopleRepository: PeopleRepository,
     private readonly tokenRepository: TokenRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -25,8 +27,20 @@ export class RegisterService {
       this.logger.log(`Intentando registrar usuario: ${registerDto.email}`);
       
       // Crear el usuario usando el servicio existente
-      const newUser = await this.createUserService.execute(registerDto);
+      const newUser = await this.createUserService.execute({
+        email: registerDto.email,
+        password: registerDto.password
+      });
       this.logger.log(`Usuario creado con ID: ${newUser._id}`);
+
+      // Crear perfil de persona asociado al usuario
+      await this.peopleRepository.create({
+        userId: newUser._id,
+        firstName: registerDto.firstName,
+        lastName: registerDto.lastName,
+        studyGoals: []
+      });
+      this.logger.log(`Perfil de persona creado para usuario: ${newUser._id}`);
 
       // Generar tokens
       const payload: IJwtPayload = { 
@@ -64,7 +78,6 @@ export class RegisterService {
         user: {
           _id: newUser._id,
           email: newUser.email,
-          name: newUser.name,
         },
         accessToken,
         refreshToken,

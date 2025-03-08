@@ -13,6 +13,8 @@ import emailConfig from './config/email.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { EmailModule } from './modules/email/email.module';
+import { PeopleModule } from './modules/people/people.module';
+import { StudyGoalsModule } from './modules/study-goals/study-goals.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -33,6 +35,8 @@ import { AppService } from './app.service';
     AuthModule,
     UsersModule,
     EmailModule,
+    PeopleModule,
+    StudyGoalsModule,
   ],
   controllers: [AppController],
   providers: [

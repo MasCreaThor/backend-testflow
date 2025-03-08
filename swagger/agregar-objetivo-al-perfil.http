@@ -1,0 +1,2 @@
+POST http://localhost:3001/people/ID_PERSONA/study-goals/ID_OBJETIVO
+Authorization: Bearer TU_TOKEN_JWT_AQUI

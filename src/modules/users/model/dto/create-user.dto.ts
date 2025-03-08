@@ -9,7 +9,4 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'La contraseña es requerida' })
   @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
   readonly password: string;
-
-  @IsNotEmpty({ message: 'El nombre es requerido' })
-  readonly name: string;
 }

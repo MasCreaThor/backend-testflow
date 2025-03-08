@@ -16,10 +16,9 @@ export class UserRepository {
   private documentToUser(doc: UserDocument): IUser {
     const user = doc.toObject();
     return {
-      _id: user._id.toString(), // Convertir ObjectId a string
+      _id: user._id.toString(),
       email: user.email,
       password: user.password,
-      name: user.name,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastLogin: user.lastLogin,

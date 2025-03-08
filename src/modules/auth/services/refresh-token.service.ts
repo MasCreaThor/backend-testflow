@@ -68,7 +68,6 @@ export class RefreshTokenService {
       user: {
         _id: user._id,
         email: user.email,
-        name: user.name,
       },
       accessToken,
       refreshToken: newRefreshToken,
