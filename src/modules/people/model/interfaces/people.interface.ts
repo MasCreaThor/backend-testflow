@@ -6,6 +6,7 @@ export interface IPeople {
   userId: string;
   firstName: string;
   lastName: string;
+  profileImage?: string;
   studyGoals?: string[] | Types.ObjectId[];
   createdAt?: Date;
   updatedAt?: Date;

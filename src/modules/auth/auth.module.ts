@@ -13,13 +13,15 @@ import {
   LoginController,
   RegisterController,
   RefreshTokenController,
-  ResetPasswordController
+  ResetPasswordController,
+  ChangePasswordController // Nuevo controlador
 } from './controllers';
 import {
   LoginService,
   RegisterService,
   RefreshTokenService,
-  ResetPasswordService
+  ResetPasswordService,
+  ChangePasswordService // Nuevo servicio
 } from './services';
 import { JwtStrategy, LocalStrategy } from './strategies';
 import { AuthToken, AuthTokenSchema } from './infra/schemas';
@@ -50,12 +52,14 @@ import { TokenRepository } from './infra/repositories';
     RegisterController,
     RefreshTokenController,
     ResetPasswordController,
+    ChangePasswordController // Añadir nuevo controlador
   ],
   providers: [
     LoginService,
     RegisterService,
     RefreshTokenService,
     ResetPasswordService,
+    ChangePasswordService, // Añadir nuevo servicio
     TokenRepository,
     JwtStrategy,
     LocalStrategy,
@@ -65,6 +69,7 @@ import { TokenRepository } from './infra/repositories';
     RegisterService,
     RefreshTokenService,
     ResetPasswordService,
+    ChangePasswordService, // Exportar el nuevo servicio
   ],
 })
 export class AuthModule {}

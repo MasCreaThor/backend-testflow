@@ -19,6 +19,7 @@ export class PeopleRepository {
       userId: people.userId.toString(),
       firstName: people.firstName,
       lastName: people.lastName,
+      profileImage: people.profileImage,
       studyGoals: people.studyGoals?.map(goal => goal.toString()),
       createdAt: people.createdAt,
       updatedAt: people.updatedAt,

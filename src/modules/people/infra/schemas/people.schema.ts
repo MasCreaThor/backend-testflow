@@ -15,6 +15,9 @@ export class People {
   @Prop({ required: true })
   lastName: string;
 
+  @Prop({ type: String, default: '' })
+  profileImage: string;
+
   @Prop({ type: [{ type: Types.ObjectId, ref: 'StudyGoal' }], default: [] })
   studyGoals: Types.ObjectId[];
 }

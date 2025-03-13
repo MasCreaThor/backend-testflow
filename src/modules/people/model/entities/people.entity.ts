@@ -7,6 +7,7 @@ export class People implements IPeople {
   userId: string;
   firstName: string;
   lastName: string;
+  profileImage?: string;
   studyGoals?: string[];
   createdAt?: Date;
   updatedAt?: Date;
@@ -16,6 +17,7 @@ export class People implements IPeople {
     this.userId = people.userId;
     this.firstName = people.firstName;
     this.lastName = people.lastName;
+    this.profileImage = people.profileImage;
     // Convertir ObjectId a string si es necesario
     this.studyGoals = Array.isArray(people.studyGoals) 
       ? people.studyGoals.map(goal => goal instanceof Types.ObjectId ? goal.toString() : goal)
