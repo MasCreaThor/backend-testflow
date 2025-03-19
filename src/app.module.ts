@@ -18,6 +18,7 @@ import { EmailModule } from './modules/email/email.module';
 import { PeopleModule } from './modules/people/people.module';
 import { StudyGoalsModule } from './modules/study-goals/study-goals.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { RolesModule } from './modules/roles/roles.module'; // Nuevo módulo de roles
 import { UploadModule } from './modules/upload/upload.module';
 
 import { AppController } from './app.controller';
@@ -46,6 +47,7 @@ import { AppService } from './app.service';
     PeopleModule,
     StudyGoalsModule,
     CategoriesModule,
+    RolesModule,
     UploadModule,
   ],
   controllers: [AppController],
