@@ -14,20 +14,36 @@ export class StudyGoalRepository {
 
   private documentToStudyGoal(doc: StudyGoalDocument): IStudyGoal {
     const goal = doc.toObject();
-    return {
+    const result: IStudyGoal = {
       _id: goal._id.toString(),
       name: goal.name,
       description: goal.description,
-      category: goal.category,
       isActive: goal.isActive,
       createdAt: goal.createdAt,
       updatedAt: goal.updatedAt,
     };
+
+    // Manejar categoryId si existe
+    if (goal.categoryId) {
+      result.categoryId = goal.categoryId.toString();
+    }
+
+    // Manejar datos populados de categoría
+    if (goal.categoryId && typeof goal.categoryId === 'object' && 'name' in goal.categoryId) {
+      result.category = {
+        _id: goal.categoryId._id.toString(),
+        name: goal.categoryId.name,
+      };
+    }
+
+    return result;
   }
 
   async findAll(activeOnly: boolean = false): Promise<IStudyGoal[]> {
     const query = activeOnly ? { isActive: true } : {};
-    const goals = await this.studyGoalModel.find(query).exec();
+    const goals = await this.studyGoalModel.find(query)
+      .populate('categoryId', 'name')
+      .exec();
     return goals.map(goal => this.documentToStudyGoal(goal));
   }
 
@@ -36,7 +52,9 @@ export class StudyGoalRepository {
       return null;
     }
     
-    const goal = await this.studyGoalModel.findById(id).exec();
+    const goal = await this.studyGoalModel.findById(id)
+      .populate('categoryId', 'name')
+      .exec();
     return goal ? this.documentToStudyGoal(goal) : null;
   }
 
@@ -50,14 +68,37 @@ export class StudyGoalRepository {
     
     const goals = await this.studyGoalModel
       .find({ _id: { $in: validIds } })
+      .populate('categoryId', 'name')
       .exec();
       
     return goals.map(goal => this.documentToStudyGoal(goal));
   }
 
+  async findByCategory(categoryId: string): Promise<IStudyGoal[]> {
+    if (!Types.ObjectId.isValid(categoryId)) {
+      return [];
+    }
+
+    const goals = await this.studyGoalModel
+      .find({ categoryId: new Types.ObjectId(categoryId) })
+      .populate('categoryId', 'name')
+      .exec();
+
+    return goals.map(goal => this.documentToStudyGoal(goal));
+  }
+
   async create(goalData: CreateStudyGoalDto): Promise<IStudyGoal> {
-    const newGoal = new this.studyGoalModel(goalData);
+    const data: any = { ...goalData };
+    
+    if (goalData.categoryId && Types.ObjectId.isValid(goalData.categoryId)) {
+      data.categoryId = new Types.ObjectId(goalData.categoryId);
+    }
+    
+    const newGoal = new this.studyGoalModel(data);
     const savedGoal = await newGoal.save();
+    
+    await savedGoal.populate('categoryId', 'name');
+    
     return this.documentToStudyGoal(savedGoal);
   }
 
@@ -66,8 +107,15 @@ export class StudyGoalRepository {
       return null;
     }
     
+    const data: any = { ...goalData };
+    
+    if (goalData.categoryId && Types.ObjectId.isValid(goalData.categoryId)) {
+      data.categoryId = new Types.ObjectId(goalData.categoryId);
+    }
+    
     const updatedGoal = await this.studyGoalModel
-      .findByIdAndUpdate(id, goalData, { new: true })
+      .findByIdAndUpdate(id, data, { new: true })
+      .populate('categoryId', 'name')
       .exec();
       
     return updatedGoal ? this.documentToStudyGoal(updatedGoal) : null;

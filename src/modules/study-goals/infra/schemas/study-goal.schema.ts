@@ -1,6 +1,6 @@
 // src/modules/study-goals/infra/schemas/study-goal.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type StudyGoalDocument = StudyGoal & Document;
 
@@ -12,8 +12,8 @@ export class StudyGoal {
   @Prop()
   description: string;
 
-  @Prop()
-  category: string;
+  @Prop({ type: Types.ObjectId, ref: 'Category' })
+  categoryId: Types.ObjectId;
   
   @Prop({ default: true })
   isActive: boolean;
