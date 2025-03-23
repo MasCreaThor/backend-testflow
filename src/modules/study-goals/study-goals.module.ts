@@ -5,10 +5,12 @@ import { StudyGoal, StudyGoalSchema } from './infra/schemas';
 import { StudyGoalController } from './controllers';
 import { StudyGoalService } from './services';
 import { StudyGoalRepository } from './infra/repositories';
+import { CategoriesModule } from '../categories/categories.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: StudyGoal.name, schema: StudyGoalSchema }]),
+    CategoriesModule,
   ],
   controllers: [StudyGoalController],
   providers: [StudyGoalService, StudyGoalRepository],

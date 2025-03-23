@@ -8,20 +8,21 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
 import { PeopleModule } from '../people/people.module';
+import { RolesModule } from '../roles/roles.module'; // Import RolesModule
 
 import { 
   LoginController,
   RegisterController,
   RefreshTokenController,
   ResetPasswordController,
-  ChangePasswordController // Nuevo controlador
+  ChangePasswordController
 } from './controllers';
 import {
   LoginService,
   RegisterService,
   RefreshTokenService,
   ResetPasswordService,
-  ChangePasswordService // Nuevo servicio
+  ChangePasswordService
 } from './services';
 import { JwtStrategy, LocalStrategy } from './strategies';
 import { AuthToken, AuthTokenSchema } from './infra/schemas';
@@ -32,6 +33,7 @@ import { TokenRepository } from './infra/repositories';
     UsersModule,
     EmailModule,
     PeopleModule,
+    RolesModule, // Add RolesModule to imports
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -52,14 +54,14 @@ import { TokenRepository } from './infra/repositories';
     RegisterController,
     RefreshTokenController,
     ResetPasswordController,
-    ChangePasswordController // Añadir nuevo controlador
+    ChangePasswordController
   ],
   providers: [
     LoginService,
     RegisterService,
     RefreshTokenService,
     ResetPasswordService,
-    ChangePasswordService, // Añadir nuevo servicio
+    ChangePasswordService,
     TokenRepository,
     JwtStrategy,
     LocalStrategy,
@@ -69,7 +71,7 @@ import { TokenRepository } from './infra/repositories';
     RegisterService,
     RefreshTokenService,
     ResetPasswordService,
-    ChangePasswordService, // Exportar el nuevo servicio
+    ChangePasswordService,
   ],
 })
 export class AuthModule {}

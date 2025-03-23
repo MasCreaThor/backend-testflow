@@ -1,5 +1,5 @@
 // src/modules/study-goals/model/dto/create-study-goal.dto.ts
-import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsMongoId } from 'class-validator';
 
 export class CreateStudyGoalDto {
   @IsNotEmpty({ message: 'El nombre es requerido' })
@@ -11,6 +11,6 @@ export class CreateStudyGoalDto {
   readonly description?: string;
 
   @IsOptional()
-  @IsString({ message: 'La categoría debe ser una cadena de texto' })
-  readonly category?: string;
+  @IsMongoId({ message: 'El ID de categoría no es válido' })
+  readonly categoryId?: string;
 }
