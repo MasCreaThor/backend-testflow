@@ -9,6 +9,8 @@ import { PeopleRepository } from '../../people/infra/repositories';
 import { TokenRepository } from '../infra/repositories';
 import { RegisterDto } from '../model/dto';
 import { IAuthResponse, IJwtPayload } from '../model/interfaces';
+import { UserRoleService } from '../../roles/services/user-role.service';
+import { RoleService } from '../../roles/services/role.service';
 
 @Injectable()
 export class RegisterService {
@@ -20,6 +22,8 @@ export class RegisterService {
     private readonly tokenRepository: TokenRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly userRoleService: UserRoleService,
+    private readonly roleService: RoleService,
   ) {}
 
   async execute(registerDto: RegisterDto): Promise<IAuthResponse> {
@@ -41,6 +45,24 @@ export class RegisterService {
         studyGoals: []
       });
       this.logger.log(`Perfil de persona creado para usuario: ${newUser._id}`);
+
+      // Asignar rol "user" por defecto
+      try {
+        // Buscar el rol "user"
+        const userRole = await this.roleService.findByName('user');
+        
+        // Asignar el rol al usuario recién creado
+        await this.userRoleService.assignRole({
+          userId: newUser._id,
+          roleId: userRole._id,
+        });
+        
+        this.logger.log(`Rol "user" asignado automáticamente al usuario: ${newUser._id}`);
+      } catch (error) {
+        this.logger.error(`Error al asignar el rol por defecto: ${error.message}`, error.stack);
+        // Continuamos con el registro a pesar del error en la asignación de rol
+        // para no bloquear el proceso completo de registro
+      }
 
       // Generar tokens
       const payload: IJwtPayload = { 

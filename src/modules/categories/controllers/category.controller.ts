@@ -4,9 +4,10 @@ import { JwtAuthGuard } from '../../../common/guards';
 import { CategoryService } from '../services/category.service';
 import { CreateCategoryDto } from '../model/dto/create-category.dto';
 import { ICategory } from '../model/interfaces/category.interface';
+import { AdminAccessGuard } from '../../roles/guards/admin-access.guard'; // Import the new guard
 
 @Controller('categories')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, AdminAccessGuard) // Add AdminAccessGuard to ensure only admins can access
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 

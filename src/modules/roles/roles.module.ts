@@ -16,7 +16,8 @@ import {
 import { 
   RoleController,
   PermissionController,
-  UserRoleController
+  UserRoleController,
+  AdminCheckController
 } from './controllers';
 
 // Services
@@ -35,7 +36,7 @@ import {
 } from './infra/repositories';
 
 // Guards
-import { RolesGuard, PermissionsGuard } from './guards';
+import { RolesGuard, PermissionsGuard, AdminAccessGuard } from './guards';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { RolesGuard, PermissionsGuard } from './guards';
     RoleController,
     PermissionController,
     UserRoleController,
+    AdminCheckController,
   ],
   providers: [
     // Services
@@ -65,6 +67,7 @@ import { RolesGuard, PermissionsGuard } from './guards';
     // Guards
     RolesGuard,
     PermissionsGuard,
+    AdminAccessGuard,
   ],
   exports: [
     // Services
@@ -76,6 +79,7 @@ import { RolesGuard, PermissionsGuard } from './guards';
     // Guards
     RolesGuard,
     PermissionsGuard,
+    AdminAccessGuard,
   ],
 })
 export class RolesModule {}
