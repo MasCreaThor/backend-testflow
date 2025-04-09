@@ -16,20 +16,24 @@ export class HttpExceptionFilter implements ExceptionFilter {
       : HttpStatus.INTERNAL_SERVER_ERROR;
     
     const exceptionResponse = exception.getResponse();
-    const error = typeof exceptionResponse === 'object'
+    
+    // Handle both string and object responses from exceptions
+    const errorResponse = typeof exceptionResponse === 'object'
       ? exceptionResponse
       : { message: exceptionResponse };
     
+    // Create a standardized error response
     const responseBody = {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
       method: request.method,
-      ...error,
+      ...errorResponse,
     };
     
+    // Log the error with helpful debug information
     this.logger.error(
-      `${request.method} ${request.url} - ${status}`,
+      `${request.method} ${request.url} - ${status} - ${JSON.stringify(errorResponse)}`,
       exception.stack,
       HttpExceptionFilter.name,
     );

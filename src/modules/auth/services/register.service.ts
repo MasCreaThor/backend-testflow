@@ -11,6 +11,10 @@ import { RegisterDto } from '../model/dto';
 import { IAuthResponse, IJwtPayload } from '../model/interfaces';
 import { UserRoleService } from '../../roles/services/user-role.service';
 import { RoleService } from '../../roles/services/role.service';
+import { 
+  InternalServerErrorException, 
+  NotFoundException 
+} from '../../../common/exceptions/app-exception';
 
 @Injectable()
 export class RegisterService {
@@ -28,23 +32,29 @@ export class RegisterService {
 
   async execute(registerDto: RegisterDto): Promise<IAuthResponse> {
     try {
-      this.logger.log(`Intentando registrar usuario: ${registerDto.email}`);
+      this.logger.log(`Attempting to register user: ${registerDto.email}`);
       
       // Crear el usuario usando el servicio existente
       const newUser = await this.createUserService.execute({
         email: registerDto.email,
         password: registerDto.password
       });
-      this.logger.log(`Usuario creado con ID: ${newUser._id}`);
+      this.logger.log(`User created with ID: ${newUser._id}`);
 
       // Crear perfil de persona asociado al usuario
-      await this.peopleRepository.create({
-        userId: newUser._id,
-        firstName: registerDto.firstName,
-        lastName: registerDto.lastName,
-        studyGoals: []
-      });
-      this.logger.log(`Perfil de persona creado para usuario: ${newUser._id}`);
+      try {
+        await this.peopleRepository.create({
+          userId: newUser._id,
+          firstName: registerDto.firstName,
+          lastName: registerDto.lastName,
+          studyGoals: []
+        });
+        this.logger.log(`Person profile created for user: ${newUser._id}`);
+      } catch (error) {
+        this.logger.error(`Failed to create person profile: ${error.message}`, error.stack);
+        // Since user is already created, we should continue but log the error
+        // In a real system, we might want to implement a rollback mechanism
+      }
 
       // Asignar rol "user" por defecto
       try {
@@ -57,11 +67,15 @@ export class RegisterService {
           roleId: userRole._id,
         });
         
-        this.logger.log(`Rol "user" asignado automáticamente al usuario: ${newUser._id}`);
+        this.logger.log(`"User" role assigned to user: ${newUser._id}`);
       } catch (error) {
-        this.logger.error(`Error al asignar el rol por defecto: ${error.message}`, error.stack);
-        // Continuamos con el registro a pesar del error en la asignación de rol
-        // para no bloquear el proceso completo de registro
+        // If error is our custom NotFoundException, log it appropriately
+        if (error instanceof NotFoundException) {
+          this.logger.warn(`Default role "user" not found: ${error.message}`);
+        } else {
+          this.logger.error(`Error assigning default role: ${error.message}`, error.stack);
+        }
+        // Continue with registration despite role assignment error
       }
 
       // Generar tokens
@@ -70,12 +84,20 @@ export class RegisterService {
         email: newUser.email 
       };
       
-      const secret = this.configService.get<string>('jwt.secret') || 'testflow-secret-key';
-      this.logger.debug('Generando access token');
+      const secret = this.configService.get<string>('jwt.secret');
+      if (!secret) {
+        this.logger.error('JWT secret not configured in environment variables');
+        throw new InternalServerErrorException(
+          'Error de configuración del servidor', 
+          'JWT_SECRET_MISSING'
+        );
+      }
+      
+      this.logger.debug('Generating access token');
       const accessToken = this.jwtService.sign(payload, { secret });
       
       // Generar refresh token
-      this.logger.debug('Generando refresh token');
+      this.logger.debug('Generating refresh token');
       const refreshToken = crypto.randomBytes(40).toString('hex');
       const refreshTokenExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
       
@@ -86,7 +108,7 @@ export class RegisterService {
       expiresAt.setDate(expiresAt.getDate() + days);
       
       // Guardar refresh token
-      this.logger.debug('Guardando refresh token en base de datos');
+      this.logger.debug('Saving refresh token to database');
       await this.tokenRepository.create({
         userId: newUser._id,
         token: refreshToken,
@@ -95,7 +117,7 @@ export class RegisterService {
         type: 'refresh',
       });
 
-      this.logger.log(`Registro completado exitosamente para: ${newUser.email}`);
+      this.logger.log(`Registration completed successfully for: ${newUser.email}`);
       return {
         user: {
           _id: newUser._id,
@@ -105,8 +127,19 @@ export class RegisterService {
         refreshToken,
       };
     } catch (error) {
-      this.logger.error(`Error en el registro: ${error.message}`, error.stack);
-      throw error;
+      // Re-throw AppExceptions (our custom exceptions)
+      if (error.name === 'AppException' || 
+          error instanceof InternalServerErrorException || 
+          error instanceof NotFoundException) {
+        throw error;
+      }
+      
+      this.logger.error(`Registration error: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(
+        'Error interno durante el proceso de registro',
+        'REGISTRATION_INTERNAL_ERROR',
+        { originalError: error.message }
+      );
     }
   }
 }
