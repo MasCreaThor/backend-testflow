@@ -56,11 +56,28 @@ import { AppService } from './app.service';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('database.uri'),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const uri = configService.get<string>('DATABASE_URI');
+        if (!uri) {
+          console.error('DATABASE_URI is not configured!');
+          throw new Error('Database URI is required');
+        }
+        
+        console.log('Connecting to MongoDB...');
+        return {
+          uri,
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+          // Settings optimized for serverless environment
+          connectTimeoutMS: 30000,
+          socketTimeoutMS: 30000,
+          serverSelectionTimeoutMS: 30000,
+          maxPoolSize: 10,
+          heartbeatFrequencyMS: 10000,
+        };
+      },
     }),
-    
+
     // Servir archivos estáticos
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),

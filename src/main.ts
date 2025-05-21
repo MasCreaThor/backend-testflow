@@ -1,86 +1,83 @@
-// src/main.ts - ARCHIVO COMPLETO PARA EL BACKEND
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import * as compression from 'compression';
-import * as fs from 'fs';
-import * as YAML from 'js-yaml';
-import * as path from 'path';
-
-// Usar require para helmet como lo teníamos antes
-const helmet = require('helmet');
+import helmet from 'helmet';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    // Aumentar el límite de solicitud y respuesta para solucionar problemas de parsing JSON
-    bodyParser: true,
-    rawBody: true,
-  });
-  const configService = app.get(ConfigService);
-  
-  // Middleware de seguridad - MODIFICADO para desarrollo
-  app.use(
-    helmet({
-      contentSecurityPolicy: false, // Deshabilitar CSP para desarrollo
-      crossOriginEmbedderPolicy: false, // Deshabilitar COEP para desarrollo
-      crossOriginOpenerPolicy: false, // Deshabilitar COOP para desarrollo
-      crossOriginResourcePolicy: false, // Deshabilitar CORP para desarrollo
-    }) as any
-  );
-  app.use(compression());
-
-  // Configuración de CORS mejorada
-  app.enableCors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // Especificar orígenes exactos en desarrollo
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-    exposedHeaders: ['Authorization'], // Importante para interceptor de autorización
-    credentials: true, // Permitir cookies y credenciales
-    maxAge: 3600, // Tiempo en segundos que el navegador puede cachear la respuesta preflight
-  });
-
-  // Configuración de Swagger con archivo YAML externo
-  const swaggerYamlPath = path.join(process.cwd(), 'swagger', 'api-docs.yaml');
-  let swaggerDocument;
-
-  if (fs.existsSync(swaggerYamlPath)) {
-    // Si el archivo YAML existe, cárgalo
-    const yamlContent = fs.readFileSync(swaggerYamlPath, 'utf8');
-    swaggerDocument = YAML.load(yamlContent);
-  } else {
-    // Si no existe, crea uno básico
-    const config = new DocumentBuilder()
-      .setTitle('TestFlow API')
-      .setDescription('API para la aplicación TestFlow')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
+  try {
+    console.log('Starting TestFlow API application...');
     
-    swaggerDocument = SwaggerModule.createDocument(app, config);
+    const app = await NestFactory.create(AppModule, {
+      bodyParser: true,
+      rawBody: true,
+    });
     
-    // Asegúrate de que el directorio exista
-    if (!fs.existsSync(path.join(process.cwd(), 'swagger'))) {
-      fs.mkdirSync(path.join(process.cwd(), 'swagger'));
+    console.log('Application created successfully');
+    
+    const configService = app.get(ConfigService);
+    
+    // Middleware setup
+    app.use(
+      helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+        crossOriginOpenerPolicy: false,
+        crossOriginResourcePolicy: false,
+      })
+    );
+    app.use(compression());
+
+    // CORS Configuration
+    const allowedOrigins = [
+      'https://testflow-frontend.vercel.app', // Update with your actual frontend URL
+      'http://localhost:3000',
+    ];
+    
+    console.log('Setting up CORS with allowed origins:', allowedOrigins);
+    
+    app.enableCors({
+      origin: allowedOrigins,
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+      exposedHeaders: ['Authorization'],
+      credentials: true,
+      maxAge: 3600,
+    });
+
+    // Swagger setup
+    if (process.env.NODE_ENV !== 'production') {
+      const config = new DocumentBuilder()
+        .setTitle('TestFlow API')
+        .setDescription('API para la aplicación TestFlow')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .build();
+      
+      const document = SwaggerModule.createDocument(app, config);
+      SwaggerModule.setup('api-docs', app, document);
+      console.log('Swagger documentation enabled at /api-docs');
     }
     
-    // Guarda el documento como YAML
-    fs.writeFileSync(
-      swaggerYamlPath,
-      YAML.dump(swaggerDocument),
-      'utf8'
-    );
+    // Get port from environment or use default
+    const port = process.env.PORT || 3000;
+    
+    await app.listen(port);
+    console.log(`Application is running on port: ${port}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('Database connection configured');
+    
+    // Log database connection info (but not credentials)
+    const dbUri = configService.get<string>('DATABASE_URI') || 'Not configured';
+    console.log(`Database URI configured: ${dbUri ? 'Yes' : 'No'}`);
+    
+    return app;
+  } catch (error) {
+    console.error('Error starting application:', error);
+    throw error;
   }
-  
-  SwaggerModule.setup('api-docs', app, swaggerDocument);
-  
-  // Puerto de la aplicación
-  const port = configService.get<number>('app.port') ?? 3001;
-  
-  await app.listen(port);
-  console.log(`Application is running on: ${await app.getUrl()}`);
-  console.log(`Swagger documentation available at: ${await app.getUrl()}/api-docs`);
-  console.log(`Servidor corriendo en: http://localhost:${port}`);
-  console.log(`Abre este link para la conección de la BD (modo dev) en: mongodb://localhost:27017/testflow`);
 }
-bootstrap();
+
+// Export the bootstrap function for better error handling in serverless environments
+export default bootstrap();
