@@ -1,0 +1,590 @@
+openapi: 3.0.3
+info:
+  title: TestFlow API
+  description: |
+    API para la plataforma TestFlow, una aplicación para generar cuestionarios personalizados a partir de documentos PDF y temas manuales.
+    
+    TestFlow permite a los usuarios:
+    - Subir archivos PDF para generar quizzes automáticos
+    - Acceder a recomendaciones de temas
+    - Participar en sesiones de estudio
+    - Seguir un sistema de aprendizaje progresivo
+  version: 1.0.0
+  contact:
+    name: Equipo de TestFlow
+    email: testflow@example.com
+    url: 'https://testflow.com'
+servers:
+  - url: 'http://localhost:3000'
+    description: Servidor de desarrollo local
+  - url: 'https://api.testflow.com'
+    description: Servidor de producción
+
+tags:
+  - name: Autenticación
+    description: Operaciones relacionadas con la autenticación de usuarios
+  - name: Usuarios
+    description: Gestión de usuarios
+  - name: Documentos
+    description: Operaciones de carga y gestión de documentos PDF
+  - name: Temas
+    description: Gestión de temas de estudio
+  - name: Cuestionarios
+    description: Generación y gestión de cuestionarios
+  - name: Sesiones de Estudio
+    description: Gestión de sesiones de estudio y respuestas
+
+paths:
+  # Rutas de Autenticación
+  /auth/register:
+    post:
+      tags:
+        - Autenticación
+      summary: Registrar un nuevo usuario
+      description: Crea una nueva cuenta de usuario en TestFlow
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDto'
+      responses:
+        '201':
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: El correo electrónico ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /auth/login:
+    post:
+      tags:
+        - Autenticación
+      summary: Iniciar sesión
+      description: Inicia sesión en la plataforma con email y contraseña
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+      responses:
+        '200':
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Autenticación
+      summary: Refrescar token de acceso
+      description: Obtiene un nuevo token de acceso usando un token de refresco
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenDto'
+      responses:
+        '200':
+          description: Token refrescado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Token inválido o expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/request-password-reset:
+    post:
+      tags:
+        - Autenticación
+      summary: Solicitar restablecimiento de contraseña
+      description: Solicita un token para restablecer la contraseña
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequestDto'
+      responses:
+        '200':
+          description: Solicitud de restablecimiento exitosa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Se ha enviado un correo con instrucciones para restablecer la contraseña
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/reset-password:
+    post:
+      tags:
+        - Autenticación
+      summary: Restablecer contraseña
+      description: Restablece la contraseña usando un token válido
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordDto'
+      responses:
+        '200':
+          description: Contraseña restablecida exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Contraseña actualizada exitosamente
+        '401':
+          description: Token inválido o expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: La nueva contraseña debe ser diferente a la actual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  # Rutas de Usuarios
+  /users:
+    post:
+      tags:
+        - Usuarios
+      summary: Crear usuario
+      description: Crea un nuevo usuario (para uso administrativo)
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDto'
+      responses:
+        '201':
+          description: Usuario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '409':
+          description: El correo electrónico ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+    get:
+      tags:
+        - Usuarios
+      summary: Obtener todos los usuarios
+      description: Obtiene una lista de todos los usuarios (requiere autenticación)
+      operationId: getAllUsers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de usuarios obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}:
+    get:
+      tags:
+        - Usuarios
+      summary: Obtener usuario por ID
+      description: Obtiene la información de un usuario específico (requiere autenticación)
+      operationId: getUserById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del usuario
+          schema:
+            type: string
+            format: objectId
+      responses:
+        '200':
+          description: Usuario obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/test-connection:
+    get:
+      tags:
+        - Usuarios
+      summary: Probar conexión a MongoDB
+      description: Verifica la conexión a la base de datos MongoDB (requiere autenticación)
+      operationId: testConnection
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Resultado de la prueba de conexión
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success, error]
+                  message:
+                    type: string
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # DTOs de autenticación
+    RegisterDto:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+          example: usuario@example.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          description: Contraseña del usuario (mínimo 6 caracteres)
+          example: "password123"
+        name:
+          type: string
+          description: Nombre del usuario
+          example: "Juan Pérez"
+
+    LoginDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+          example: usuario@example.com
+        password:
+          type: string
+          format: password
+          description: Contraseña del usuario
+          example: "password123"
+
+    RefreshTokenDto:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Token de refresco
+          example: "a4b8c16d32e64f128f256h512..."
+
+    ResetPasswordRequestDto:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+          example: usuario@example.com
+
+    ResetPasswordDto:
+      type: object
+      required:
+        - token
+        - newPassword
+      properties:
+        token:
+          type: string
+          description: Token de restablecimiento de contraseña
+          example: "a4b8c16d32e64f128f256h512..."
+        newPassword:
+          type: string
+          format: password
+          minLength: 6
+          description: Nueva contraseña del usuario
+          example: "newpassword123"
+
+    # DTOs de usuarios
+    CreateUserDto:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+          example: usuario@example.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          description: Contraseña del usuario (mínimo 6 caracteres)
+          example: "password123"
+        name:
+          type: string
+          description: Nombre del usuario
+          example: "Juan Pérez"
+
+    UpdateUserDto:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+          example: usuario@example.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          description: Contraseña del usuario (mínimo 6 caracteres)
+          example: "password123"
+        name:
+          type: string
+          description: Nombre del usuario
+          example: "Juan Pérez"
+
+    # Modelos de respuesta
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            _id:
+              type: string
+              format: objectId
+              example: "60d21b4667d0d8992e610c85"
+            email:
+              type: string
+              format: email
+              example: usuario@example.com
+            name:
+              type: string
+              example: "Juan Pérez"
+        accessToken:
+          type: string
+          description: Token de acceso JWT
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Token de refresco
+          example: "a4b8c16d32e64f128f256h512..."
+
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectId
+          example: "60d21b4667d0d8992e610c85"
+        email:
+          type: string
+          format: email
+          example: usuario@example.com
+        name:
+          type: string
+          example: "Juan Pérez"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-08-01T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2023-08-01T12:00:00Z"
+        lastLogin:
+          type: string
+          format: date-time
+          example: "2023-08-01T14:30:00Z"
+
+    # Modelo de token
+    Token:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectId
+          example: "60d21b4667d0d8992e610c85"
+        userId:
+          type: string
+          format: objectId
+          example: "60d21b4667d0d8992e610c85"
+        token:
+          type: string
+          example: "a4b8c16d32e64f128f256h512..."
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2023-08-08T12:00:00Z"
+        used:
+          type: boolean
+          example: false
+        type:
+          type: string
+          enum: [refresh, reset]
+          example: "refresh"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-08-01T12:00:00Z"
+
+    # Respuestas de error
+    Error:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 401
+        message:
+          type: string
+          example: "Credenciales inválidas"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2023-08-01T12:00:00Z"
+        path:
+          type: string
+          example: "/auth/login"
+        method:
+          type: string
+          example: "POST"
+
+    ValidationError:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Error de validación"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2023-08-01T12:00:00Z"
+        path:
+          type: string
+          example: "/auth/register"
+        method:
+          type: string
+          example: "POST"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              property:
+                type: string
+                example: "email"
+              messages:
+                type: array
+                items:
+                  type: string
+                example: ["El correo electrónico no es válido"]

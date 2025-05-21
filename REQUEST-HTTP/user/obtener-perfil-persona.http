@@ -1,0 +1,2 @@
+GET http://localhost:3001/people/user/ID_USUARIO
+Authorization: Bearer TU_TOKEN_JWT_AQUI

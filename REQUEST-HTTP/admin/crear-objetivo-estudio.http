@@ -1,0 +1,9 @@
+POST http://localhost:3001/study-goals
+Content-Type: application/json
+Authorization: Bearer TU_TOKEN_JWT_AQUI
+
+{
+  "name": "Aprender JavaScript",
+  "description": "Dominar el lenguaje JavaScript y sus frameworks modernos",
+  "category": "Programación"
+}

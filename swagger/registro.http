@@ -1,0 +1,9 @@
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "udemy.fiona@gmail.com",
+  "password": "Adrian12*",
+  "firstName": "Yadir",
+  "lastName": "Muñoz"
+}
