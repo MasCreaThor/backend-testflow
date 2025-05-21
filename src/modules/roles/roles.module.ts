@@ -14,7 +14,14 @@ import {
 
 // Controllers
 import { 
-  RoleController,
+  FindAllRolesController,
+  FindRoleByIdController,
+  FindRoleByNameController,
+  CreateRoleController,
+  UpdateRoleController,
+  DeleteRoleController,
+  AddPermissionToRoleController,
+  RemovePermissionFromRoleController,
   PermissionController,
   UserRoleController,
   AdminCheckController
@@ -22,7 +29,14 @@ import {
 
 // Services
 import { 
-  RoleService,
+  FindAllRolesService,
+  FindRoleByIdService,
+  FindRoleByNameService,
+  CreateRoleService,
+  UpdateRoleService,
+  DeleteRoleService,
+  AddPermissionToRoleService,
+  RemovePermissionFromRoleService,
   PermissionService,
   UserRoleService,
   InitRolesService
@@ -38,6 +52,15 @@ import {
 // Guards
 import { RolesGuard, PermissionsGuard, AdminAccessGuard } from './guards';
 
+import { LoggerService } from '../../shared/services/logger.service';
+
+/**
+ * Módulo de roles y permisos
+ * 
+ * Proporciona funcionalidad para la gestión de roles, permisos
+ * y asignaciones de roles a usuarios, así como guardias para
+ * protección de rutas basada en roles y permisos.
+ */
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -47,14 +70,30 @@ import { RolesGuard, PermissionsGuard, AdminAccessGuard } from './guards';
     ]),
   ],
   controllers: [
-    RoleController,
+    FindAllRolesController,
+    FindRoleByIdController,
+    FindRoleByNameController,
+    CreateRoleController,
+    UpdateRoleController,
+    DeleteRoleController,
+    AddPermissionToRoleController,
+    RemovePermissionFromRoleController,
     PermissionController,
     UserRoleController,
     AdminCheckController,
   ],
   providers: [
+    LoggerService,
+    
     // Services
-    RoleService,
+    FindAllRolesService,
+    FindRoleByIdService,
+    FindRoleByNameService,
+    CreateRoleService,
+    UpdateRoleService,
+    DeleteRoleService,
+    AddPermissionToRoleService,
+    RemovePermissionFromRoleService,
     PermissionService,
     UserRoleService,
     InitRolesService,
@@ -70,10 +109,11 @@ import { RolesGuard, PermissionsGuard, AdminAccessGuard } from './guards';
     AdminAccessGuard,
   ],
   exports: [
-    // Services
-    RoleService,
-    PermissionService,
+    // Exportar servicios específicos que otros módulos necesitan
+    FindRoleByNameService,
+    FindAllRolesService,
     UserRoleService,
+    PermissionService,
     InitRolesService,
     
     // Guards

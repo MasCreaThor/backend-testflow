@@ -2,7 +2,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UserRepository } from '../../users/infra/repositories';
 import { CategoryRepository } from '../../categories/infra/repositories';
-import { RoleService } from '../../roles/services/role.service';
+import { FindAllRolesService } from '../../roles/services/find-all-roles.service';
 
 @Injectable()
 export class AdminService {
@@ -11,7 +11,7 @@ export class AdminService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly categoryRepository: CategoryRepository,
-    private readonly roleService: RoleService,
+    private readonly findAllRolesService: FindAllRolesService,
   ) {}
 
   async getStats() {
@@ -20,7 +20,7 @@ export class AdminService {
       const users = await this.userRepository.findAll();
 
       // número de roles
-      const roles = await this.roleService.findAll();
+      const roles = await this.findAllRolesService.execute();
 
       const categories = await this.categoryRepository.findAll();
       

@@ -1,0 +1,6 @@
+# GET http://localhost:3001/health
+
+# GET http://localhost:3001/health/database
+
+# GET http://localhost:3001/diagnostic/database
+# Authorization: Bearer TU_TOKEN_JWT_AQUI

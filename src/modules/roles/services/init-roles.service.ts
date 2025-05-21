@@ -1,6 +1,8 @@
 // src/modules/roles/services/init-roles.service.ts
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { RoleService } from './role.service';
+import { FindRoleByNameService } from './find-role-by-name.service';
+import { CreateRoleService } from './create-role.service';
+import { UpdateRoleService } from './update-role.service';
 import { PermissionService } from './permission.service';
 import { UserRoleService } from './user-role.service';
 import { IRole, IPermission } from '../infra/model/interfaces';
@@ -10,7 +12,9 @@ export class InitRolesService implements OnModuleInit {
   private readonly logger = new Logger(InitRolesService.name);
 
   constructor(
-    private readonly roleService: RoleService,
+    private readonly findRoleByNameService: FindRoleByNameService,
+    private readonly createRoleService: CreateRoleService,
+    private readonly updateRoleService: UpdateRoleService,
     private readonly permissionService: PermissionService,
     private readonly userRoleService: UserRoleService,
   ) {}
@@ -101,17 +105,17 @@ export class InitRolesService implements OnModuleInit {
       let adminRole: IRole;
       
       try {
-        adminRole = await this.roleService.findByName('admin');
+        adminRole = await this.findRoleByNameService.execute('admin');
         this.logger.log('Rol de administrador ya existe, actualizando permisos...');
         
         // Actualizar con todos los permisos
-        await this.roleService.update(adminRole._id, {
+        await this.updateRoleService.execute(adminRole._id, {
           permissions: permissionNames,
           description: 'Acceso completo al sistema',
         });
       } catch (error) {
         // Crear rol de administrador con todos los permisos
-        adminRole = await this.roleService.create({
+        adminRole = await this.createRoleService.execute({
           name: 'admin',
           description: 'Acceso completo al sistema',
           permissions: permissionNames,
@@ -151,17 +155,17 @@ export class InitRolesService implements OnModuleInit {
       ];
       
       try {
-        userRole = await this.roleService.findByName('user');
+        userRole = await this.findRoleByNameService.execute('user');
         this.logger.log('Rol de usuario ya existe, actualizando permisos...');
         
         // Actualizar permisos de usuario
-        await this.roleService.update(userRole._id, {
+        await this.updateRoleService.execute(userRole._id, {
           permissions: userPermissions,
           description: 'Usuario regular del sistema',
         });
       } catch (error) {
         // Crear rol de usuario
-        userRole = await this.roleService.create({
+        userRole = await this.createRoleService.execute({
           name: 'user',
           description: 'Usuario regular del sistema',
           permissions: userPermissions,
@@ -212,17 +216,17 @@ export class InitRolesService implements OnModuleInit {
       ];
       
       try {
-        instructorRole = await this.roleService.findByName('instructor');
+        instructorRole = await this.findRoleByNameService.execute('instructor');
         this.logger.log('Rol de instructor ya existe, actualizando permisos...');
         
         // Actualizar permisos
-        await this.roleService.update(instructorRole._id, {
+        await this.updateRoleService.execute(instructorRole._id, {
           permissions: instructorPermissions,
           description: 'Instructor o profesor con acceso a funciones adicionales',
         });
       } catch (error) {
         // Crear rol de instructor
-        instructorRole = await this.roleService.create({
+        instructorRole = await this.createRoleService.execute({
           name: 'instructor',
           description: 'Instructor o profesor con acceso a funciones adicionales',
           permissions: instructorPermissions,
@@ -263,17 +267,17 @@ export class InitRolesService implements OnModuleInit {
       ];
       
       try {
-        contentManagerRole = await this.roleService.findByName('content-manager');
+        contentManagerRole = await this.findRoleByNameService.execute('content-manager');
         this.logger.log('Rol de gestor de contenido ya existe, actualizando permisos...');
         
         // Actualizar permisos
-        await this.roleService.update(contentManagerRole._id, {
+        await this.updateRoleService.execute(contentManagerRole._id, {
           permissions: contentManagerPermissions,
           description: 'Gestor de contenido educativo',
         });
       } catch (error) {
         // Crear rol de gestor de contenido
-        contentManagerRole = await this.roleService.create({
+        contentManagerRole = await this.createRoleService.execute({
           name: 'content-manager',
           description: 'Gestor de contenido educativo',
           permissions: contentManagerPermissions,
@@ -293,7 +297,7 @@ export class InitRolesService implements OnModuleInit {
   async assignAdminToFirstUser(userId: string): Promise<boolean> {
     try {
       // Buscar rol de admin
-      const adminRole = await this.roleService.findByName('admin');
+      const adminRole = await this.findRoleByNameService.execute('admin');
       
       // Asignar al usuario
       await this.userRoleService.assignRole({

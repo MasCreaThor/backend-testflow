@@ -1,6 +1,6 @@
 // src/modules/auth/controllers/change-password.controller.ts
 import { Controller, Post, Body, UseGuards, Request, Logger } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../common/guards';
+import { JwtAuthGuard } from '../../../shared/guards';
 import { ChangePasswordService } from '../services/change-password.service';
 import { ChangePasswordDto } from '../model/dto/change-password.dto';
 

@@ -1,6 +1,6 @@
 // src/modules/users/controllers/test-connection.controller.ts
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../common/guards';
+import { JwtAuthGuard } from '../../../shared/guards';
 import { TestConnectionService } from '../services';
 
 @Controller('users/test-connection')

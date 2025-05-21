@@ -1,6 +1,6 @@
 // src/modules/roles/controllers/admin-check.controller.ts
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../common/guards';
+import { JwtAuthGuard } from '../../../shared/guards';
 import { UserRoleService } from '../services/user-role.service';
 import { JwtUser } from '../decorators/jwt-user.decorator';
 

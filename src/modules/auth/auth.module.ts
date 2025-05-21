@@ -8,7 +8,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
 import { PeopleModule } from '../people/people.module';
-import { RolesModule } from '../roles/roles.module'; // Import RolesModule
+import { RolesModule } from '../roles/roles.module';
 
 import { 
   LoginController,
@@ -17,6 +17,7 @@ import {
   ResetPasswordController,
   ChangePasswordController
 } from './controllers';
+
 import {
   LoginService,
   RegisterService,
@@ -24,24 +25,29 @@ import {
   ResetPasswordService,
   ChangePasswordService
 } from './services';
+
 import { JwtStrategy, LocalStrategy } from './strategies';
 import { AuthToken, AuthTokenSchema } from './infra/schemas';
 import { TokenRepository } from './infra/repositories';
+import { LoggerService } from '../../shared/services/logger.service';
 
+/**
+ * Módulo de autenticación que gestiona login, registro y operaciones relacionadas con tokens
+ */
 @Module({
   imports: [
     UsersModule,
     EmailModule,
     PeopleModule,
-    RolesModule, // Add RolesModule to imports
+    RolesModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('jwt.secret') || 'testflow-secret-key',
+        secret: configService.get<string>('JWT_SECRET') || 'testflow-secret-key',
         signOptions: {
-          expiresIn: configService.get<string>('jwt.expiresIn') || '1d',
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '1d',
         },
       }),
     }),
@@ -57,6 +63,7 @@ import { TokenRepository } from './infra/repositories';
     ChangePasswordController
   ],
   providers: [
+    LoggerService,
     LoginService,
     RegisterService,
     RefreshTokenService,

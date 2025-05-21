@@ -1,6 +1,6 @@
 // src/modules/admin/controllers/admin.controller.ts
 import { Controller, Get, UseGuards, Logger } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../common/guards';
+import { JwtAuthGuard } from '../../../shared/guards';
 import { AdminAccessGuard } from '../../roles/guards/admin-access.guard';
 import { AdminService } from '../services/admin.service';
 

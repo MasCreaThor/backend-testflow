@@ -11,7 +11,7 @@ import {
     UseGuards, 
     Logger 
   } from '@nestjs/common';
-  import { JwtAuthGuard } from '../../../common/guards';
+  import { JwtAuthGuard } from '../../../shared/guards';
   import { PermissionService } from '../services';
   import { CreatePermissionDto, UpdatePermissionDto } from '../infra/model/dto';
   import { IPermission } from '../infra/model/interfaces';

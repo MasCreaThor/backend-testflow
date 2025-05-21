@@ -1,6 +1,6 @@
 // src/modules/users/controllers/find-user-by-id.controller.ts
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../common/guards';
+import { JwtAuthGuard } from '../../../shared/guards';
 import { FindUserByIdService } from '../services';
 
 @Controller('users')

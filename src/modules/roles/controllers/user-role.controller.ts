@@ -10,7 +10,7 @@ import {
     Logger, 
     Req 
   } from '@nestjs/common';
-  import { JwtAuthGuard } from '../../../common/guards';
+  import { JwtAuthGuard } from '../../../shared/guards';
   import { UserRoleService } from '../services';
   import { AssignRoleDto } from '../infra/model/dto';
   import { IUserRole } from '../infra/model/interfaces';

@@ -1,6 +1,6 @@
 // src/modules/users/controllers/find-all-users.controller.ts
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../common/guards';
+import { JwtAuthGuard } from '../../../shared/guards';
 import { FindAllUsersService } from '../services';
 
 @Controller('users')

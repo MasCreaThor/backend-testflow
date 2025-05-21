@@ -1,4 +1,4 @@
-// src/main.ts
+// src/main.ts - ARCHIVO COMPLETO PARA EL BACKEND
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -12,23 +12,32 @@ import * as path from 'path';
 const helmet = require('helmet');
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    // Aumentar el límite de solicitud y respuesta para solucionar problemas de parsing JSON
+    bodyParser: true,
+    rawBody: true,
+  });
   const configService = app.get(ConfigService);
   
-  // Middleware de seguridad
+  // Middleware de seguridad - MODIFICADO para desarrollo
   app.use(
     helmet({
       contentSecurityPolicy: false, // Deshabilitar CSP para desarrollo
+      crossOriginEmbedderPolicy: false, // Deshabilitar COEP para desarrollo
+      crossOriginOpenerPolicy: false, // Deshabilitar COOP para desarrollo
+      crossOriginResourcePolicy: false, // Deshabilitar CORP para desarrollo
     }) as any
   );
   app.use(compression());
 
-  // Configuración de CORS (modificada)
+  // Configuración de CORS mejorada
   app.enableCors({
-    origin: true,  // Permitir todas las origenes en desarrollo
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // Especificar orígenes exactos en desarrollo
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+    exposedHeaders: ['Authorization'], // Importante para interceptor de autorización
+    credentials: true, // Permitir cookies y credenciales
+    maxAge: 3600, // Tiempo en segundos que el navegador puede cachear la respuesta preflight
   });
 
   // Configuración de Swagger con archivo YAML externo
