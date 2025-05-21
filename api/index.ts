@@ -1,53 +1,54 @@
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module';
+import { ValidationPipe } from '@nestjs/common';
 import * as express from 'express';
-import * as helmet from 'helmet';
-import * as compression from 'compression';
 
-let cachedApp: any = null;
+let cachedApp: express.Express | null = null;
 
-async function createApp() {
+async function createApp(): Promise<express.Express> {
   if (cachedApp) {
     return cachedApp;
   }
 
-  const expressApp = express();
-  
-  const app = await NestFactory.create(
-    AppModule,
-    new ExpressAdapter(expressApp),
-    {
-      logger: ['error', 'warn', 'log'],
-    }
-  );
+  try {
+    const expressApp = express();
+    
+    const app = await NestFactory.create(
+      AppModule,
+      new ExpressAdapter(expressApp),
+      {
+        logger: false, // Disable logging in production
+      }
+    );
 
-  // Security middleware
-  app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  }));
-  
-  app.use(compression());
+    // Enable validation pipes
+    app.useGlobalPipes(new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }));
 
-  // CORS configuration
-  app.enableCors({
-    origin: [
-      process.env.APP_URL || 'http://localhost:3000',
-      'https://testflow-frontend.vercel.app', // Update with your actual frontend URL
-    ],
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-    credentials: true,
-  });
+    // Enable CORS
+    app.enableCors({
+      origin: [
+        process.env.APP_URL,
+        'https://testflow-frontend.vercel.app',
+        'http://localhost:3000',
+      ].filter(Boolean),
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+      credentials: true,
+    });
 
-  // Global prefix for API routes
-  app.setGlobalPrefix('api', { exclude: ['/'] });
-
-  await app.init();
-  
-  cachedApp = expressApp;
-  return expressApp;
+    // Initialize the NestJS application
+    await app.init();
+    
+    cachedApp = expressApp;
+    return expressApp;
+  } catch (error) {
+    console.error('Error creating NestJS app:', error);
+    throw error;
+  }
 }
 
 export default async (req: any, res: any) => {
@@ -58,7 +59,7 @@ export default async (req: any, res: any) => {
     console.error('Error in serverless function:', error);
     return res.status(500).json({
       message: 'Internal server error',
-      error: error.message
+      error: process.env.NODE_ENV === 'production' ? 'Something went wrong' : error.message
     });
   }
 };
