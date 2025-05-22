@@ -1,72 +1,86 @@
 import { NestFactory } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import * as compression from 'compression';
-import * as helmet from 'helmet';
+import { ValidationPipe } from '@nestjs/common';
+import * as express from 'express';
 
-async function bootstrap() {
+let cachedApp: express.Express | null = null;
+
+async function createApp(): Promise<express.Express> {
+  if (cachedApp) {
+    return cachedApp;
+  }
+
+  const expressApp = express();
+  
+  const app = await NestFactory.create(
+    AppModule,
+    new ExpressAdapter(expressApp),
+    {
+      logger: process.env.NODE_ENV === 'production' ? false : ['error', 'warn', 'log'],
+    }
+  );
+
+  // Global validation pipe
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+  }));
+
+  // CORS configuration
+  app.enableCors({
+    origin: [
+      process.env.APP_URL,
+      'https://testflow-frontend.vercel.app',
+      'http://localhost:3000',
+    ].filter(Boolean),
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+    credentials: true,
+  });
+
+  await app.init();
+  
+  cachedApp = expressApp;
+  return expressApp;
+}
+
+// For serverless environment
+export default async (req: any, res: any) => {
   try {
-    console.log('Starting TestFlow API application...');
-    
-    const app = await NestFactory.create(AppModule, {
-      logger: ['error', 'warn', 'log'],
+    const app = await createApp();
+    return app(req, res);
+  } catch (error) {
+    console.error('Serverless function error:', error);
+    return res.status(500).json({
+      message: 'Internal server error',
+      timestamp: new Date().toISOString(),
     });
-    
-    console.log('Application created successfully');
-    
-    const configService = app.get(ConfigService);
-    
-    // Middleware setup
-    app.use(helmet({
-      contentSecurityPolicy: false,
-      crossOriginEmbedderPolicy: false,
-    }));
-    app.use(compression());
+  }
+};
 
-    // CORS Configuration
-    const allowedOrigins = [
-      process.env.APP_URL || 'http://localhost:3000',
-      'https://frontend-testflow.vercel.app',
-    ];
+// For local development
+async function bootstrap() {
+  if (process.env.NODE_ENV !== 'production') {
+    const app = await NestFactory.create(AppModule);
     
-    console.log('Setting up CORS with allowed origins:', allowedOrigins);
+    app.useGlobalPipes(new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }));
     
     app.enableCors({
-      origin: allowedOrigins,
-      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-      exposedHeaders: ['Authorization'],
+      origin: ['http://localhost:3000'],
       credentials: true,
     });
-
-    // Swagger setup for development
-    const config = new DocumentBuilder()
-      .setTitle('TestFlow API')
-      .setDescription('API para la aplicación TestFlow')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
     
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api-docs', app, document);
-    console.log('Swagger documentation enabled at /api-docs');
-    
-    // Get port from environment or use default
     const port = process.env.PORT || 3001;
-    
     await app.listen(port);
-    console.log(`Application is running on port: ${port}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    
-    return app;
-  } catch (error) {
-    console.error('Error starting application:', error);
-    process.exit(1);
+    console.log(`Application is running on: http://localhost:${port}`);
   }
 }
 
-// Only run bootstrap if this file is executed directly (not imported)
+// Run bootstrap only in development
 if (require.main === module) {
   bootstrap();
 }
