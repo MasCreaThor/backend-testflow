@@ -4,7 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
 
-let app: any;
+let app: express.Application;
 
 async function createServer() {
   const server = express();
@@ -30,15 +30,18 @@ async function createServer() {
   return server;
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: express.Request, res: express.Response) {
   try {
     if (!app) {
       app = await createServer();
     }
-    app(req, res);
+    return app(req, res);
   } catch (error) {
     console.error('Error en el servidor:', error);
-    res.status(500).send('Error interno del servidor');
+    return res.status(500).json({
+      message: 'Error interno del servidor',
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
