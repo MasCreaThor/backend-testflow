@@ -17,17 +17,17 @@ async function createApp(): Promise<express.Express> {
     AppModule,
     new ExpressAdapter(expressApp),
     {
-      logger: process.env.NODE_ENV === 'production' ? false : ['error', 'warn', 'log'],
+      logger: ['error', 'warn', 'log'], // Habilitamos logs básicos para ambos entornos
     }
   );
 
-  // Global validation pipe
+  // Configuración de ValidationPipe global
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     transform: true,
   }));
 
-  // CORS configuration
+  // Configuración de CORS
   app.enableCors({
     origin: [
       process.env.APP_URL,
@@ -45,42 +45,46 @@ async function createApp(): Promise<express.Express> {
   return expressApp;
 }
 
-// For serverless environment
-export default async (req: any, res: any) => {
+// Función para manejo serverless (Vercel)
+export default async function handler(req: any, res: any) {
   try {
     const app = await createApp();
-    return app(req, res);
+    app(req, res);
   } catch (error) {
-    console.error('Serverless function error:', error);
-    return res.status(500).json({
-      message: 'Internal server error',
+    console.error('Error en función serverless:', error);
+    res.status(500).json({
+      message: 'Error interno del servidor',
       timestamp: new Date().toISOString(),
     });
   }
-};
-
-// For local development
-async function bootstrap() {
-  if (process.env.NODE_ENV !== 'production') {
-    const app = await NestFactory.create(AppModule);
-    
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true,
-      transform: true,
-    }));
-    
-    app.enableCors({
-      origin: ['http://localhost:3000'],
-      credentials: true,
-    });
-    
-    const port = process.env.PORT || 3001;
-    await app.listen(port);
-    console.log(`Application is running on: http://localhost:${port}`);
-  }
 }
 
-// Run bootstrap only in development
+// Función para desarrollo local
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+  }));
+  
+  app.enableCors({
+    origin: [
+      process.env.APP_URL,
+      'https://testflow-frontend.vercel.app',
+      'http://localhost:3000',
+    ].filter(Boolean),
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+    credentials: true,
+  });
+  
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+  console.log(`Aplicación ejecutándose en: http://localhost:${port}`);
+}
+
+// Ejecutar bootstrap solo en desarrollo
 if (require.main === module) {
   bootstrap();
 }
