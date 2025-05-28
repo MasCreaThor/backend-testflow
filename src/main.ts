@@ -32,7 +32,7 @@ async function bootstrap() {
 
   // Configuración de CORS mejorada
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // Especificar orígenes exactos en desarrollo
+    origin: true, // Especificar orígenes exactos en desarrollo
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
     exposedHeaders: ['Authorization'], // Importante para interceptor de autorización
