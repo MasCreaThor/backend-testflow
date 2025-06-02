@@ -52,7 +52,6 @@ import { AppService } from './app.service';
     // Módulo de configuración centralizada
     ConfigModule,
     
-    // Configuración de MongoDB - CORREGIDO
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -65,11 +64,10 @@ import { AppService } from './app.service';
         }
         
         console.log('Connecting to MongoDB...');
+        console.log('URI:', uri); // Para debug
         return {
           uri,
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-          // Settings optimized for serverless environment
+          // Remover opciones deprecated
           connectTimeoutMS: 30000,
           socketTimeoutMS: 30000,
           serverSelectionTimeoutMS: 30000,
