@@ -57,25 +57,14 @@ import { AppService } from './app.service';
         
         console.log('🔗 Connecting to MongoDB...');
         
-        // SOLUCIÓN: Configuración optimizada para serverless
+        // SOLUCIÓN: Configuración minimalista y compatible
         return {
           uri,
-          // Timeouts más cortos para serverless
-          connectTimeoutMS: 10000,  // 10 segundos
-          socketTimeoutMS: 15000,   // 15 segundos  
-          serverSelectionTimeoutMS: 10000, // 10 segundos
-          // Pool más pequeño para serverless
-          maxPoolSize: 5,
-          minPoolSize: 1,
-          // Configuraciones para mejor rendimiento en serverless
-          heartbeatFrequencyMS: 30000, // 30 segundos
-          bufferMaxEntries: 0, // Desactivar buffering
-          bufferCommands: false, // No usar buffer
-          // Configuraciones adicionales
-          retryWrites: true,
-          w: 'majority',
-          // Para conexiones serverless
-          maxIdleTimeMS: 30000, // 30 segundos antes de cerrar conexiones inactivas
+          // Solo las opciones más básicas y compatibles
+          connectTimeoutMS: 30000,
+          socketTimeoutMS: 30000,
+          serverSelectionTimeoutMS: 30000,
+          maxPoolSize: 10,
         };
       },
     }),
