@@ -38,14 +38,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 /**
- * Módulo principal de la aplicación que configura:
- * - Configuración centralizada
- * - Conexión a base de datos
- * - Servicio de archivos estáticos
- * - Filtros globales
- * - Pipes globales
- * - Interceptores globales
- * - Módulos de la aplicación
+ * Módulo principal de la aplicación optimizado para Vercel
  */
 @Module({
   imports: [
@@ -56,29 +49,39 @@ import { AppService } from './app.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        // SOLUCIÓN: Usar el path correcto según configuration.ts
         const uri = configService.get<string>('database.uri');
         if (!uri) {
           console.error('DATABASE_URI/MONGODB_URI is not configured!');
           throw new Error('Database URI is required');
         }
         
-        console.log('Connecting to MongoDB...');
-        console.log('URI:', uri); // Para debug
+        console.log('🔗 Connecting to MongoDB...');
+        
+        // SOLUCIÓN: Configuración optimizada para serverless
         return {
           uri,
-          // Remover opciones deprecated
-          connectTimeoutMS: 30000,
-          socketTimeoutMS: 30000,
-          serverSelectionTimeoutMS: 30000,
-          maxPoolSize: 10,
-          heartbeatFrequencyMS: 10000,
+          // Timeouts más cortos para serverless
+          connectTimeoutMS: 10000,  // 10 segundos
+          socketTimeoutMS: 15000,   // 15 segundos  
+          serverSelectionTimeoutMS: 10000, // 10 segundos
+          // Pool más pequeño para serverless
+          maxPoolSize: 5,
+          minPoolSize: 1,
+          // Configuraciones para mejor rendimiento en serverless
+          heartbeatFrequencyMS: 30000, // 30 segundos
+          bufferMaxEntries: 0, // Desactivar buffering
+          bufferCommands: false, // No usar buffer
+          // Configuraciones adicionales
+          retryWrites: true,
+          w: 'majority',
+          // Para conexiones serverless
+          maxIdleTimeMS: 30000, // 30 segundos antes de cerrar conexiones inactivas
         };
       },
     }),
 
     // Servir archivos estáticos - Solo en desarrollo
-    ...(process.env.NODE_ENV !== 'production' ? [
+    ...(process.env.NODE_ENV !== 'production' && !process.env.VERCEL ? [
       ServeStaticModule.forRoot({
         rootPath: join(process.cwd(), 'uploads'),
         serveRoot: '/uploads',
@@ -121,11 +124,13 @@ import { AppService } from './app.service';
       useClass: ValidationPipe,
     },
     
-    // Interceptores globales
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
-    },
+    // Interceptores globales - Solo en desarrollo para reducir overhead
+    ...(process.env.NODE_ENV !== 'production' ? [
+      {
+        provide: APP_INTERCEPTOR,
+        useClass: LoggingInterceptor,
+      },
+    ] : []),
     {
       provide: APP_INTERCEPTOR,
       useClass: TimeoutInterceptor,

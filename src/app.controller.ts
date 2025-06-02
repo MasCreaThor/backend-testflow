@@ -11,10 +11,20 @@ export class AppController {
   }
   
   @Get('health')
-  healthCheck(): { status: string; timestamp: string } {
+  healthCheck(): { status: string; timestamp: string; environment: string } {
     return {
       status: 'ok',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    };
+  }
+
+  @Get('api/health')
+  apiHealthCheck(): { status: string; timestamp: string; message: string } {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      message: 'TestFlow API is running on Vercel'
     };
   }
 }

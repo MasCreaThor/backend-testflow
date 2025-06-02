@@ -22,11 +22,19 @@ export class InitRolesService implements OnModuleInit {
    * Se ejecuta automáticamente al iniciar la aplicación
    */
   async onModuleInit() {
-    // SOLUCIÓN: Solo ejecutar en desarrollo, no en producción
-    if (process.env.NODE_ENV === 'production') {
-      this.logger.log('Skipping roles initialization in production environment');
+    // SOLUCIÓN: NO ejecutar en producción ni en Vercel
+    if (process.env.NODE_ENV === 'production' || 
+        process.env.VERCEL || 
+        process.env.VERCEL_ENV) {
+      this.logger.log('Skipping roles initialization in production/Vercel environment');
       return;
     }
+    
+    // SOLUCIÓN: Agregar timeout para evitar bloqueos
+    const timeoutId = setTimeout(() => {
+      this.logger.warn('Roles initialization is taking too long, skipping...');
+      return;
+    }, 10000); // 10 segundos máximo
     
     this.logger.log('Inicializando roles y permisos del sistema...');
     
@@ -37,9 +45,27 @@ export class InitRolesService implements OnModuleInit {
       // Crear roles por defecto
       await this.createDefaultRoles();
       
+      clearTimeout(timeoutId);
       this.logger.log('Inicialización de roles y permisos completada con éxito');
     } catch (error) {
+      clearTimeout(timeoutId);
       this.logger.error(`Error durante la inicialización de roles: ${error.message}`, error.stack);
+    }
+  }
+
+  /**
+   * Método público para inicializar manualmente (útil para desarrollo)
+   */
+  async initializeManually(): Promise<void> {
+    this.logger.log('Inicialización manual de roles y permisos...');
+    
+    try {
+      await this.createResourcePermissions();
+      await this.createDefaultRoles();
+      this.logger.log('Inicialización manual completada con éxito');
+    } catch (error) {
+      this.logger.error(`Error en inicialización manual: ${error.message}`, error.stack);
+      throw error;
     }
   }
 
@@ -141,22 +167,17 @@ export class InitRolesService implements OnModuleInit {
         // Perfil de usuario
         'people:read',
         'people:update',
-        // Documentos propios
-        'documents:create',
-        'documents:read',
-        'documents:update',
-        'documents:delete',
-        'documents:list',
-        // Cuestionarios propios
-        'quizzes:create',
-        'quizzes:read',
-        'quizzes:update',
-        'quizzes:delete',
-        'quizzes:list',
-        // Sesiones de estudio
-        'study-sessions:create',
-        'study-sessions:read',
-        'study-sessions:list',
+        // Objetivos de estudio
+        'study-goals:create',
+        'study-goals:read',
+        'study-goals:update',
+        'study-goals:delete',
+        'study-goals:list',
+        // Categorías (solo lectura)
+        'categories:read',
+        'categories:list',
+        // Dashboard
+        'dashboard:view',
       ];
       
       try {
@@ -181,123 +202,10 @@ export class InitRolesService implements OnModuleInit {
     } catch (error) {
       this.logger.error(`Error configurando rol de usuario: ${error.message}`);
     }
-    
-    // Crear rol de profesor/instructor
-    try {
-      let instructorRole: IRole;
-      
-      // Permisos para instructores
-      const instructorPermissions = [
-        // Todos los permisos de usuario normal
-        'people:read',
-        'people:update',
-        'documents:create',
-        'documents:read',
-        'documents:update',
-        'documents:delete',
-        'documents:list',
-        'quizzes:create',
-        'quizzes:read',
-        'quizzes:update',
-        'quizzes:delete',
-        'quizzes:list',
-        'study-sessions:create',
-        'study-sessions:read',
-        'study-sessions:list',
-        // Permisos adicionales
-        'categories:create',
-        'categories:read',
-        'categories:update',
-        'categories:list',
-        'study-goals:create',
-        'study-goals:read',
-        'study-goals:update',
-        'study-goals:list',
-        'questions:create',
-        'questions:read',
-        'questions:update',
-        'questions:list',
-        'dashboard:view',
-      ];
-      
-      try {
-        instructorRole = await this.findRoleByNameService.execute('instructor');
-        this.logger.log('Rol de instructor ya existe, actualizando permisos...');
-        
-        // Actualizar permisos
-        await this.updateRoleService.execute(instructorRole._id, {
-          permissions: instructorPermissions,
-          description: 'Instructor o profesor con acceso a funciones adicionales',
-        });
-      } catch (error) {
-        // Crear rol de instructor
-        instructorRole = await this.createRoleService.execute({
-          name: 'instructor',
-          description: 'Instructor o profesor con acceso a funciones adicionales',
-          permissions: instructorPermissions,
-        });
-        
-        this.logger.log('Rol de instructor creado con éxito');
-      }
-    } catch (error) {
-      this.logger.error(`Error configurando rol de instructor: ${error.message}`);
-    }
-    
-    // Opcionalmente: Crear otros roles específicos según necesidades
-    try {
-      let contentManagerRole: IRole;
-      
-      // Permisos para gestor de contenido
-      const contentManagerPermissions = [
-        // Permisos específicos para gestión de contenido
-        'categories:create',
-        'categories:read',
-        'categories:update',
-        'categories:delete',
-        'categories:list',
-        'study-goals:create',
-        'study-goals:read',
-        'study-goals:update',
-        'study-goals:delete',
-        'study-goals:list',
-        'documents:read',
-        'documents:list',
-        'quizzes:read',
-        'quizzes:list',
-        'questions:create',
-        'questions:read',
-        'questions:update',
-        'questions:delete',
-        'questions:list',
-      ];
-      
-      try {
-        contentManagerRole = await this.findRoleByNameService.execute('content-manager');
-        this.logger.log('Rol de gestor de contenido ya existe, actualizando permisos...');
-        
-        // Actualizar permisos
-        await this.updateRoleService.execute(contentManagerRole._id, {
-          permissions: contentManagerPermissions,
-          description: 'Gestor de contenido educativo',
-        });
-      } catch (error) {
-        // Crear rol de gestor de contenido
-        contentManagerRole = await this.createRoleService.execute({
-          name: 'content-manager',
-          description: 'Gestor de contenido educativo',
-          permissions: contentManagerPermissions,
-        });
-        
-        this.logger.log('Rol de gestor de contenido creado con éxito');
-      }
-    } catch (error) {
-      this.logger.error(`Error configurando rol de gestor de contenido: ${error.message}`);
-    }
   }
 
   /**
-   * Asigna el rol de admin al primer usuario (opcional)
-   * Puede ser útil para crear un admin por defecto
+   * Asigna el rol de admin al primer usuario (útil para desarrollo)
    */
   async assignAdminToFirstUser(userId: string): Promise<boolean> {
     try {
