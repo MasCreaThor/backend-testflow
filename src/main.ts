@@ -31,7 +31,10 @@ async function bootstrap() {
     }) as any
   );
   
-  app.use(compression());
+  // SOLUCIÓN: Solo usar compression en desarrollo, no en producción/Vercel
+  if (process.env.NODE_ENV !== 'production') {
+    app.use(compression());
+  }
 
   // Configuración de CORS mejorada para producción
   const allowedOrigins = process.env.ALLOWED_ORIGINS 
