@@ -1,24 +1,15 @@
-// src/app.module.ts
+// src/app.module.ts - Versión súper minimalista
 import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
-import { ServeStaticModule } from '@nestjs/serve-static';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
 
 // Módulo de configuración centralizado
 import { ConfigModule } from './config/config.module';
 
-// Shared - Filtros, pipes, interceptores
+// Shared básico
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { ValidationPipe } from './shared/pipes/validation.pipe';
-import { 
-  TransformResponseInterceptor,
-  LoggingInterceptor,
-  TimeoutInterceptor 
-} from './shared/interceptors';
-
-// Shared - Servicios
 import { LoggerService } from './shared/services/logger.service';
 
 // Módulos de la aplicación
@@ -29,7 +20,6 @@ import { PeopleModule } from './modules/people/people.module';
 import { StudyGoalsModule } from './modules/study-goals/study-goals.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { RolesModule } from './modules/roles/roles.module';
-import { UploadModule } from './modules/upload/upload.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './health/health.module';
 
@@ -37,51 +27,25 @@ import { HealthModule } from './health/health.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-/**
- * Módulo principal de la aplicación optimizado para Vercel
- */
 @Module({
   imports: [
-    // Módulo de configuración centralizada
+    // Configuración
     ConfigModule,
     
+    // MongoDB con configuración minimalista
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const uri = configService.get<string>('database.uri');
-        if (!uri) {
-          console.error('DATABASE_URI/MONGODB_URI is not configured!');
-          throw new Error('Database URI is required');
-        }
-        
         console.log('🔗 Connecting to MongoDB...');
         
-        // SOLUCIÓN: Configuración minimalista y compatible
-        return {
-          uri,
-          // Solo las opciones más básicas y compatibles
-          connectTimeoutMS: 30000,
-          socketTimeoutMS: 30000,
-          serverSelectionTimeoutMS: 30000,
-          maxPoolSize: 10,
-        };
+        // CONFIGURACIÓN SÚPER SIMPLE - Solo la URI
+        return { uri };
       },
     }),
-
-    // Servir archivos estáticos - Solo en desarrollo
-    ...(process.env.NODE_ENV !== 'production' && !process.env.VERCEL ? [
-      ServeStaticModule.forRoot({
-        rootPath: join(process.cwd(), 'uploads'),
-        serveRoot: '/uploads',
-        serveStaticOptions: {
-          etag: true,
-          maxAge: 86400000, // 1 día
-        }
-      })
-    ] : []),
     
-    // Módulos de la aplicación
+    // Módulos
     AuthModule,
     UsersModule,
     EmailModule,
@@ -89,44 +53,20 @@ import { AppService } from './app.service';
     StudyGoalsModule,
     CategoriesModule,
     RolesModule,
-    // UploadModule, // TEMPORALMENTE DESHABILITADO PARA VERCEL
     AdminModule,
     HealthModule,
   ],
   controllers: [AppController],
   providers: [
-    // Servicio base
     AppService,
-    
-    // Servicio de logging
     LoggerService,
-    
-    // Filtro de excepciones global
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
-    
-    // Pipe de validación global
     {
       provide: APP_PIPE,
       useClass: ValidationPipe,
-    },
-    
-    // Interceptores globales - Solo en desarrollo para reducir overhead
-    ...(process.env.NODE_ENV !== 'production' ? [
-      {
-        provide: APP_INTERCEPTOR,
-        useClass: LoggingInterceptor,
-      },
-    ] : []),
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TimeoutInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransformResponseInterceptor,
     },
   ],
 })
