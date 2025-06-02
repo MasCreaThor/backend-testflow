@@ -1,4 +1,3 @@
-// src/modules/roles/services/init-roles.service.ts
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { FindRoleByNameService } from './find-role-by-name.service';
 import { CreateRoleService } from './create-role.service';
@@ -23,6 +22,12 @@ export class InitRolesService implements OnModuleInit {
    * Se ejecuta automáticamente al iniciar la aplicación
    */
   async onModuleInit() {
+    // SOLUCIÓN: Solo ejecutar en desarrollo, no en producción
+    if (process.env.NODE_ENV === 'production') {
+      this.logger.log('Skipping roles initialization in production environment');
+      return;
+    }
+    
     this.logger.log('Inicializando roles y permisos del sistema...');
     
     try {
