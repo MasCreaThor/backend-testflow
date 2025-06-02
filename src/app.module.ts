@@ -99,7 +99,7 @@ import { AppService } from './app.service';
     StudyGoalsModule,
     CategoriesModule,
     RolesModule,
-    UploadModule,
+    // UploadModule, // TEMPORALMENTE DESHABILITADO PARA VERCEL
     AdminModule,
     HealthModule,
   ],
