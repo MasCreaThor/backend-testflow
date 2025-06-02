@@ -21,35 +21,26 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   
-  // Middleware de seguridad
-  app.use(
-    helmet({
-      contentSecurityPolicy: process.env.NODE_ENV === 'production',
-      crossOriginEmbedderPolicy: false,
-      crossOriginOpenerPolicy: false,
-      crossOriginResourcePolicy: false,
-    }) as any
-  );
-  
-  // SOLUCIÓN: Solo usar compression en desarrollo, no en producción/Vercel
+  // SOLUCIÓN: Simplificar middleware para Vercel
   if (process.env.NODE_ENV !== 'production') {
+    // Solo usar middleware completo en desarrollo
+    app.use(
+      helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+        crossOriginOpenerPolicy: false,
+        crossOriginResourcePolicy: false,
+      }) as any
+    );
     app.use(compression());
   }
 
-  // Configuración de CORS mejorada para producción
-  const allowedOrigins = process.env.ALLOWED_ORIGINS 
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'];
-
+  // Configuración de CORS simplificada para producción
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? allowedOrigins
-      : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: process.env.NODE_ENV === 'production' ? true : ['http://localhost:3000', 'http://127.0.0.1:3000'],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-    exposedHeaders: ['Authorization'],
     credentials: true,
-    maxAge: 3600,
   });
 
   // Solo configurar Swagger en desarrollo
@@ -65,21 +56,23 @@ async function bootstrap() {
     SwaggerModule.setup('api-docs', app, document);
   }
   
-  // Puerto de la aplicación
-  const port = process.env.PORT || configService.get<number>('app.port') || 3001;
-  
-  // Solo escuchar en puerto si no estamos en Vercel
-  if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-    await app.listen(port);
-    console.log(`Application is running on: ${await app.getUrl()}`);
-    console.log(`Swagger documentation available at: ${await app.getUrl()}/api-docs`);
+  // SOLUCIÓN: En Vercel, no ejecutar listen
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    console.log('Bootstrap completed for Vercel serverless');
+    return app;
   }
 
+  // Solo para desarrollo local
+  const port = process.env.PORT || configService.get<number>('app.port') || 3001;
+  await app.listen(port);
+  console.log(`Application is running on: ${await app.getUrl()}`);
+  console.log(`Swagger documentation available at: ${await app.getUrl()}/api-docs`);
+  
   return app;
 }
 
-// Para Vercel
-if (process.env.VERCEL) {
+// Para Vercel - export directo
+if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
   module.exports = bootstrap;
 } else {
   bootstrap();

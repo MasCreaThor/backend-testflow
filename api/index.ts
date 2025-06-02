@@ -4,10 +4,14 @@ import { AppModule } from '../src/app.module';
 import * as express from 'express';
 
 const server = express();
+let app: any;
 
 export default async (req: any, res: any) => {
-  if (!global.__nestApp) {
-    const app = await NestFactory.create(
+  // Solo crear la app una vez y reutilizarla
+  if (!app) {
+    console.log('Creating NestJS app for Vercel...');
+    
+    app = await NestFactory.create(
       AppModule,
       new ExpressAdapter(server),
       { 
@@ -16,9 +20,9 @@ export default async (req: any, res: any) => {
       }
     );
 
-    // Configurar CORS para Vercel
+    // Configurar CORS simple para Vercel
     app.enableCors({
-      origin: process.env.FRONTEND_URL || true,
+      origin: true, // Permitir todos los orígenes temporalmente
       methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
       credentials: true,
@@ -27,9 +31,11 @@ export default async (req: any, res: any) => {
     // Configurar prefijo global
     app.setGlobalPrefix('api');
 
+    // IMPORTANTE: Inicializar la aplicación sin escuchar puerto
     await app.init();
-    global.__nestApp = app;
+    console.log('NestJS app initialized successfully');
   }
 
+  // Manejar la request con la app ya inicializada
   return server(req, res);
 };
