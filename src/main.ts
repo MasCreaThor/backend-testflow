@@ -37,7 +37,7 @@ async function bootstrap() {
 
   // Configuración de CORS simplificada para producción
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' ? true : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: process.env.NODE_ENV === 'production' ? true : ['http://localhost:3000', 'https://frontend-testflow.vercel.app/', 'http://127.0.0.1:3000'],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
     credentials: true,
