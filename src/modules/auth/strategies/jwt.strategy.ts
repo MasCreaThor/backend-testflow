@@ -21,7 +21,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'testflow-secret-key',
+      // SOLUCIÓN: Usar la configuración correctamente
+      secretOrKey: configService.get<string>('jwt.secret') || 'testflow-secret-key',
     });
     
     this.logger.setContext(JwtStrategy.name);
@@ -36,9 +37,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: IJwtPayload) {
     this.logger.debug(`Validando token JWT para usuario ID: ${payload.sub}`);
     
-    const user = await this.userRepository.findById(payload.sub);
+    const user = await this.userRepository.findByEmail(payload.email);
     if (!user) {
-      this.logger.warn(`Usuario con ID ${payload.sub} no encontrado durante validación JWT`);
+      this.logger.warn(`Usuario con email ${payload.email} no encontrado durante validación JWT`);
       throw new UnauthorizedException('Usuario no encontrado');
     }
     

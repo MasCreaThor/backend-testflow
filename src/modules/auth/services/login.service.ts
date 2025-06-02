@@ -66,8 +66,8 @@ export class LoginService {
         email: user.email 
       };
       
-      // Obtener valores de configuración - SOLUCIÓN: acceder a las variables correctamente
-      const secret = this.configService.get<string>('JWT_SECRET');
+      // SOLUCIÓN: Usar la configuración correctamente
+      const secret = this.configService.get<string>('jwt.secret');
       if (!secret) {
         this.logger.error('JWT secret no configurado');
         throw new Error('JWT secret not configured');
@@ -81,8 +81,8 @@ export class LoginService {
       // Generar refresh token
       const refreshToken = crypto.randomBytes(40).toString('hex');
       
-      // Obtener expiración con valor seguro - SOLUCIÓN: acceder a la variable correcta
-      const refreshTokenExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d';
+      // SOLUCIÓN: Usar la configuración correctamente  
+      const refreshTokenExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn') ?? '7d';
       
       // Parsear los días de forma segura
       const daysString = refreshTokenExpiresIn.replace('d', '');

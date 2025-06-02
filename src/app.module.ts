@@ -52,14 +52,15 @@ import { AppService } from './app.service';
     // Módulo de configuración centralizada
     ConfigModule,
     
-    // Configuración de MongoDB
+    // Configuración de MongoDB - CORREGIDO
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        const uri = configService.get<string>('DATABASE_URI');
+        // SOLUCIÓN: Usar el path correcto según configuration.ts
+        const uri = configService.get<string>('database.uri');
         if (!uri) {
-          console.error('DATABASE_URI is not configured!');
+          console.error('DATABASE_URI/MONGODB_URI is not configured!');
           throw new Error('Database URI is required');
         }
         
@@ -78,15 +79,17 @@ import { AppService } from './app.service';
       },
     }),
 
-    // Servir archivos estáticos
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
-      serveRoot: '/uploads',
-      serveStaticOptions: {
-        etag: true,
-        maxAge: 86400000, // 1 día
-      }
-    }),
+    // Servir archivos estáticos - Solo en desarrollo
+    ...(process.env.NODE_ENV !== 'production' ? [
+      ServeStaticModule.forRoot({
+        rootPath: join(process.cwd(), 'uploads'),
+        serveRoot: '/uploads',
+        serveStaticOptions: {
+          etag: true,
+          maxAge: 86400000, // 1 día
+        }
+      })
+    ] : []),
     
     // Módulos de la aplicación
     AuthModule,
